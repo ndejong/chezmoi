@@ -23,13 +23,8 @@ import (
 	"github.com/twpayne/chezmoi/chezmoi2/internal/chezmoitest"
 )
 
-// umask is the umask used in tests. The umask applies to the process and so
-// cannot be overridden in individual tests.
-const umask = 0o22
-
 //nolint:interfacer
 func TestMain(m *testing.M) {
-	chezmoi.SetUmask(umask)
 	os.Exit(testscript.RunMain(m, map[string]func() int{
 		"chezmoi": func() int {
 			return cmd.Main(cmd.VersionInfo{
@@ -118,13 +113,12 @@ func cmdCmpMod(ts *testscript.TestScript, neg bool, args []string) {
 	if err != nil {
 		ts.Fatalf("%s: %v", args[1], err)
 	}
-	umask := chezmoi.GetUmask()
-	equal := info.Mode().Perm()&^umask == os.FileMode(mode64)&^umask
+	equal := info.Mode().Perm() == os.FileMode(mode64)&^chezmoi.Umask
 	if neg && equal {
 		ts.Fatalf("%s unexpectedly has mode %03o", args[1], info.Mode().Perm())
 	}
 	if !neg && !equal {
-		ts.Fatalf("%s has mode %03o, expected %03o", args[1], info.Mode().Perm(), os.FileMode(mode64))
+		ts.Fatalf("%s has mode %03o, expected %03o", args[1], info.Mode().Perm(), os.FileMode(mode64)&^chezmoi.Umask)
 	}
 }
 
@@ -392,7 +386,7 @@ func cmdUNIX2DOS(ts *testscript.TestScript, neg bool, args []string) {
 }
 
 func newBuilder() *vfst.Builder {
-	return vfst.NewBuilder(vfst.BuilderUmask(umask))
+	return vfst.NewBuilder(vfst.BuilderUmask(chezmoi.Umask))
 }
 
 func prependDirToPath(dir, path string) string {

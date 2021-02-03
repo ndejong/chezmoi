@@ -61,5 +61,6 @@ func (c *Config) runAddCmd(cmd *cobra.Command, args []string, sourceState *chezm
 		Exists:       c.add.exists,
 		Include:      c.add.include,
 		Template:     c.add.template,
+		Umask:        c.Umask.FileMode(),
 	})
 }

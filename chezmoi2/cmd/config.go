@@ -174,7 +174,7 @@ func newConfig(options ...configOption) (*Config, error) {
 		fs:      vfs.OSFS,
 		homeDir: homeDir,
 		DestDir: homeDir,
-		Umask:   fileMode(chezmoi.GetUmask()),
+		Umask:   fileMode(chezmoi.Umask),
 		Color:   "auto",
 		Diff: diffCmdConfig{
 			include: chezmoi.NewIncludeSet(chezmoi.IncludeAll &^ chezmoi.IncludeScripts),

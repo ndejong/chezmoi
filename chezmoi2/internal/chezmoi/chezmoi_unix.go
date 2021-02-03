@@ -14,15 +14,12 @@ import (
 	vfs "github.com/twpayne/go-vfs"
 )
 
-var (
-	umask        os.FileMode
-	whitespaceRx = regexp.MustCompile(`\s+`)
-)
+// Umask on UNIX is the user's umask. This call also sets the process's umask to
+// 0, which means that chezmoi has to set permissions exactly when writing
+// files.
+var Umask = os.FileMode(syscall.Umask(0))
 
-func init() {
-	umask = os.FileMode(syscall.Umask(0))
-	syscall.Umask(int(umask))
-}
+var whitespaceRx = regexp.MustCompile(`\s+`)
 
 // FQDNHostname returns the FQDN hostname.
 func FQDNHostname(fs vfs.FS) (string, error) {
@@ -30,17 +27,6 @@ func FQDNHostname(fs vfs.FS) (string, error) {
 		return fqdnHostname, nil
 	}
 	return lookupAddrFQDNHostname()
-}
-
-// GetUmask returns the umask.
-func GetUmask() os.FileMode {
-	return umask
-}
-
-// SetUmask sets the umask.
-func SetUmask(newUmask os.FileMode) {
-	umask = newUmask
-	syscall.Umask(int(umask))
 }
 
 // etcHostsFQDNHostname returns the FQDN hostname from parsing /etc/hosts.
@@ -85,9 +71,4 @@ func lookupAddrFQDNHostname() (string, error) {
 		return "", nil
 	}
 	return strings.TrimSuffix(names[0], "."), nil
-}
-
-// umaskPermEqual returns if two permissions are equal after applying umask.
-func umaskPermEqual(perm1, perm2, umask os.FileMode) bool {
-	return perm1&^umask == perm2&^umask
 }

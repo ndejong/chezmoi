@@ -113,7 +113,7 @@ func TestTargetStateEntryApplyAndEqual(t *testing.T) {
 				require.NoError(t, err)
 
 				// Apply the target state entry.
-				require.NoError(t, targetState.Apply(s, nil, actualStateEntry, GetUmask()))
+				require.NoError(t, targetState.Apply(s, nil, actualStateEntry, Umask))
 
 				// Verify that the actual state entry matches the desired
 				// state.
@@ -123,7 +123,7 @@ func TestTargetStateEntryApplyAndEqual(t *testing.T) {
 				// verify that it is equal to the target state entry.
 				newActualStateEntry, err := NewActualStateEntry(s, "/home/user/target", nil, nil)
 				require.NoError(t, err)
-				equal, err := targetState.Equal(newActualStateEntry, GetUmask())
+				equal, err := targetState.Equal(newActualStateEntry, Umask)
 				require.NoError(t, err)
 				require.True(t, equal)
 			})
@@ -141,7 +141,7 @@ func targetStateTest(t *testing.T, ts TargetStateEntry) []vfst.PathTest {
 	case *TargetStateDir:
 		return []vfst.PathTest{
 			vfst.TestIsDir,
-			vfst.TestModePerm(ts.perm &^ GetUmask()),
+			vfst.TestModePerm(ts.perm &^ Umask),
 		}
 	case *TargetStateFile:
 		expectedContents, err := ts.Contents()
@@ -149,12 +149,12 @@ func targetStateTest(t *testing.T, ts TargetStateEntry) []vfst.PathTest {
 		return []vfst.PathTest{
 			vfst.TestModeIsRegular,
 			vfst.TestContents(expectedContents),
-			vfst.TestModePerm(ts.perm &^ GetUmask()),
+			vfst.TestModePerm(ts.perm &^ Umask),
 		}
 	case *TargetStatePresent:
 		return []vfst.PathTest{
 			vfst.TestModeIsRegular,
-			vfst.TestModePerm(ts.perm &^ GetUmask()),
+			vfst.TestModePerm(ts.perm &^ Umask),
 		}
 	case *TargetStateRenameDir:
 		// FIXME test for presence of newName

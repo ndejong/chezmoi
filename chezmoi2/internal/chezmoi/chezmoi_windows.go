@@ -9,6 +9,9 @@ import (
 	"golang.org/x/sys/windows"
 )
 
+// Umask on Windows is 0o777, which causes chemzoi to ignore permissions.
+var Umask = os.ModePerm
+
 // FQDNHostname returns the machine's fully-qualified DNS domain name.
 func FQDNHostname(fs vfs.FS) (string, error) {
 	n := uint32(windows.MAX_COMPUTERNAME_LENGTH + 1)
@@ -24,14 +27,6 @@ func FQDNHostname(fs vfs.FS) (string, error) {
 	return string(utf16.Decode(buf[0:n])), nil
 }
 
-// GetUmask returns the umask.
-func GetUmask() os.FileMode {
-	return os.ModePerm
-}
-
-// SetUmask sets the umask.
-func SetUmask(umask os.FileMode) {}
-
 // isExecutable returns false on Windows.
 func isExecutable(info os.FileInfo) bool {
 	return false
@@ -44,9 +39,4 @@ func isPrivate(info os.FileInfo) bool {
 
 func isSlash(c uint8) bool {
 	return c == '\\' || c == '/'
-}
-
-// umaskPermEqual returns true on Windows.
-func umaskPermEqual(perm1 os.FileMode, perm2 os.FileMode, umask os.FileMode) bool {
-	return true
 }

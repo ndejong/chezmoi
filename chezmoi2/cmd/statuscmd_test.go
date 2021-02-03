@@ -33,7 +33,7 @@ func TestStatusCmd(t *testing.T) {
 			postApplyTests: []interface{}{
 				vfst.TestPath("/home/user/.local/share/chezmoi/dot_bashrc",
 					vfst.TestModeIsRegular,
-					vfst.TestModePerm(0o666&^chezmoi.GetUmask()),
+					vfst.TestModePerm(0o666&^chezmoi.Umask),
 					vfst.TestContentsString("# contents of .bashrc\n"),
 				),
 			},

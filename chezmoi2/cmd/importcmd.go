@@ -98,5 +98,6 @@ func (c *Config) runImportCmd(cmd *cobra.Command, args []string, sourceState *ch
 		Exact:     c._import.exact,
 		Include:   c._import.include,
 		RemoveDir: removeDir,
+		Umask:     c.Umask.FileMode(),
 	})
 }

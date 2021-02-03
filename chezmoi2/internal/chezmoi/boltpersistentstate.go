@@ -27,7 +27,7 @@ func NewBoltPersistentState(system System, path AbsPath, mode BoltPersistentStat
 		if mode == BoltPersistentStateReadOnly {
 			return &BoltPersistentState{}, nil
 		}
-		if err := MkdirAll(system, path.Dir(), 0o777); err != nil {
+		if err := MkdirAll(system, path.Dir(), 0o777&^Umask); err != nil {
 			return nil, err
 		}
 	}
@@ -42,7 +42,7 @@ func NewBoltPersistentState(system System, path AbsPath, mode BoltPersistentStat
 		ReadOnly: mode == BoltPersistentStateReadOnly,
 		Timeout:  time.Second,
 	}
-	db, err := bbolt.Open(string(path), 0o600, &options)
+	db, err := bbolt.Open(string(path), 0o600&^Umask, &options)
 	if err != nil {
 		return nil, err
 	}

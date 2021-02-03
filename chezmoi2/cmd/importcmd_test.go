@@ -11,6 +11,7 @@ import (
 	"github.com/twpayne/go-vfs"
 	"github.com/twpayne/go-vfs/vfst"
 
+	"github.com/twpayne/chezmoi/chezmoi2/internal/chezmoi"
 	"github.com/twpayne/chezmoi/chezmoi2/internal/chezmoitest"
 )
 
@@ -56,16 +57,16 @@ func TestImportCmd(t *testing.T) {
 			tests: []interface{}{
 				vfst.TestPath("/home/user/.local/share/chezmoi/dot_dir",
 					vfst.TestIsDir,
-					vfst.TestModePerm(0o777),
+					vfst.TestModePerm(0o777&^chezmoi.Umask),
 				),
 				vfst.TestPath("/home/user/.local/share/chezmoi/dot_dir/dot_file",
 					vfst.TestModeIsRegular,
-					vfst.TestModePerm(0o666),
+					vfst.TestModePerm(0o666&^chezmoi.Umask),
 					vfst.TestContentsString("# contents of archive/.dir/.file\n"),
 				),
 				vfst.TestPath("/home/user/.local/share/chezmoi/dot_dir/symlink_dot_symlink",
 					vfst.TestModeIsRegular,
-					vfst.TestModePerm(0o666),
+					vfst.TestModePerm(0o666&^chezmoi.Umask),
 					vfst.TestContentsString(".file\n"),
 				),
 			},
@@ -76,7 +77,7 @@ func TestImportCmd(t *testing.T) {
 				"--strip-components=1",
 			},
 			extraRoot: map[string]interface{}{
-				"/home/user/.local/share/chezmoi/dir": &vfst.Dir{Perm: 0o777},
+				"/home/user/.local/share/chezmoi/dir": &vfst.Dir{Perm: 0o777 &^ chezmoi.Umask},
 			},
 			tests: []interface{}{
 				vfst.TestPath("/home/user/.local/share/chezmoi/dir/dot_dir",
@@ -107,19 +108,19 @@ func TestImportCmd(t *testing.T) {
 			tests: []interface{}{
 				vfst.TestPath("/home/user/.local/share/chezmoi/dir/dot_dir",
 					vfst.TestIsDir,
-					vfst.TestModePerm(0o777),
+					vfst.TestModePerm(0o777&^chezmoi.Umask),
 				),
 				vfst.TestPath("/home/user/.local/share/chezmoi/dir/file",
 					vfst.TestDoesNotExist,
 				),
 				vfst.TestPath("/home/user/.local/share/chezmoi/dir/dot_dir/dot_file",
 					vfst.TestModeIsRegular,
-					vfst.TestModePerm(0o666),
+					vfst.TestModePerm(0o666&^chezmoi.Umask),
 					vfst.TestContentsString("# contents of archive/.dir/.file\n"),
 				),
 				vfst.TestPath("/home/user/.local/share/chezmoi/dir/dot_dir/symlink_dot_symlink",
 					vfst.TestModeIsRegular,
-					vfst.TestModePerm(0o666),
+					vfst.TestModePerm(0o666&^chezmoi.Umask),
 					vfst.TestContentsString(".file\n"),
 				),
 			},
@@ -131,21 +132,21 @@ func TestImportCmd(t *testing.T) {
 				"--strip-components=1",
 			},
 			extraRoot: map[string]interface{}{
-				"/home/user/.local/share/chezmoi/dir": &vfst.Dir{Perm: 0o777},
+				"/home/user/.local/share/chezmoi/dir": &vfst.Dir{Perm: 0o777 &^ chezmoi.Umask},
 			},
 			tests: []interface{}{
 				vfst.TestPath("/home/user/.local/share/chezmoi/dir/exact_dot_dir",
 					vfst.TestIsDir,
-					vfst.TestModePerm(0o777),
+					vfst.TestModePerm(0o777&^chezmoi.Umask),
 				),
 				vfst.TestPath("/home/user/.local/share/chezmoi/dir/exact_dot_dir/dot_file",
 					vfst.TestModeIsRegular,
-					vfst.TestModePerm(0o666),
+					vfst.TestModePerm(0o666&^chezmoi.Umask),
 					vfst.TestContentsString("# contents of archive/.dir/.file\n"),
 				),
 				vfst.TestPath("/home/user/.local/share/chezmoi/dir/exact_dot_dir/symlink_dot_symlink",
 					vfst.TestModeIsRegular,
-					vfst.TestModePerm(0o666),
+					vfst.TestModePerm(0o666&^chezmoi.Umask),
 					vfst.TestContentsString(".file\n"),
 				),
 			},
@@ -153,7 +154,7 @@ func TestImportCmd(t *testing.T) {
 	} {
 		t.Run(strings.Join(tc.args, "_"), func(t *testing.T) {
 			chezmoitest.WithTestFS(t, map[string]interface{}{
-				"/home/user": &vfst.Dir{Perm: 0o777},
+				"/home/user": &vfst.Dir{Perm: 0o777 &^ chezmoi.Umask},
 			}, func(fs vfs.FS) {
 				if tc.extraRoot != nil {
 					require.NoError(t, vfst.NewBuilder().Build(fs, tc.extraRoot))

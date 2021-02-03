@@ -22,7 +22,7 @@ func (t *xorEncryption) Decrypt(ciphertext []byte) ([]byte, error) {
 }
 
 func (t *xorEncryption) DecryptToFile(filename string, ciphertext []byte) error {
-	return ioutil.WriteFile(filename, t.xorWithKey(ciphertext), 0o666)
+	return ioutil.WriteFile(filename, t.xorWithKey(ciphertext), 0o600)
 }
 
 func (t *xorEncryption) Encrypt(plaintext []byte) ([]byte, error) {
@@ -99,7 +99,7 @@ func testEncryptionEncryptFile(t *testing.T, encryption Encryption) {
 			assert.NoError(t, os.RemoveAll(tempDir))
 		}()
 		filename := filepath.Join(tempDir, "filename")
-		require.NoError(t, ioutil.WriteFile(filename, expectedPlaintext, 0o666))
+		require.NoError(t, ioutil.WriteFile(filename, expectedPlaintext, 0o600))
 
 		actualCiphertext, err := encryption.EncryptFile(filename)
 		require.NoError(t, err)

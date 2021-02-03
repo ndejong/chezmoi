@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"os"
+	"runtime"
 	"time"
 )
 
@@ -98,15 +99,15 @@ func (t *TargetStateAbsent) SkipApply(persistentState PersistentState) (bool, er
 // Apply updates actualStateEntry to match t. It does not recurse.
 func (t *TargetStateDir) Apply(system System, persistentState PersistentState, actualStateEntry ActualStateEntry, umask os.FileMode) error {
 	if actualStateDir, ok := actualStateEntry.(*ActualStateDir); ok {
-		if umaskPermEqual(actualStateDir.perm, t.perm, umask) {
+		if runtime.GOOS == "windows" || actualStateDir.perm == t.perm&^umask {
 			return nil
 		}
-		return system.Chmod(actualStateDir.Path(), t.perm)
+		return system.Chmod(actualStateDir.Path(), t.perm&^umask)
 	}
 	if err := actualStateEntry.Remove(system); err != nil {
 		return err
 	}
-	return system.Mkdir(actualStateEntry.Path(), t.perm)
+	return system.Mkdir(actualStateEntry.Path(), t.perm^umask)
 }
 
 // EntryState returns t's entry state.
@@ -123,7 +124,7 @@ func (t *TargetStateDir) Equal(actualStateEntry ActualStateEntry, umask os.FileM
 	if !ok {
 		return false, nil
 	}
-	if !umaskPermEqual(actualStateDir.perm, t.perm, umask) {
+	if runtime.GOOS != "windows" && actualStateDir.perm != t.perm&^umask {
 		return false, nil
 	}
 	return true, nil
@@ -154,10 +155,10 @@ func (t *TargetStateFile) Apply(system System, persistentState PersistentState, 
 			return err
 		}
 		if bytes.Equal(actualContentsSHA256, contentsSHA256) {
-			if umaskPermEqual(actualStateFile.perm, t.perm, umask) {
+			if runtime.GOOS == "windows" || actualStateFile.perm == t.perm&^umask {
 				return nil
 			}
-			return system.Chmod(actualStateFile.Path(), t.perm)
+			return system.Chmod(actualStateFile.Path(), t.perm&^umask)
 		}
 	} else if err := actualStateEntry.Remove(system); err != nil {
 		return err
@@ -166,7 +167,7 @@ func (t *TargetStateFile) Apply(system System, persistentState PersistentState, 
 	if err != nil {
 		return err
 	}
-	return system.WriteFile(actualStateEntry.Path(), contents, t.perm)
+	return system.WriteFile(actualStateEntry.Path(), contents, t.perm&^umask)
 }
 
 // EntryState returns t's entry state.
@@ -193,7 +194,7 @@ func (t *TargetStateFile) Equal(actualStateEntry ActualStateEntry, umask os.File
 	if !ok {
 		return false, nil
 	}
-	if !umaskPermEqual(actualStateFile.perm, t.perm, umask) {
+	if actualStateFile.perm != t.perm&^umask {
 		return false, nil
 	}
 	actualContentsSHA256, err := actualStateFile.ContentsSHA256()
@@ -224,10 +225,10 @@ func (t *TargetStateFile) SkipApply(persistentState PersistentState) (bool, erro
 // Apply updates actualStateEntry to match t.
 func (t *TargetStatePresent) Apply(system System, persistentState PersistentState, actualStateEntry ActualStateEntry, umask os.FileMode) error {
 	if actualStateFile, ok := actualStateEntry.(*ActualStateFile); ok {
-		if umaskPermEqual(actualStateFile.perm, t.perm, umask) {
+		if runtime.GOOS == "windows" || actualStateFile.perm == t.perm&^umask {
 			return nil
 		}
-		return system.Chmod(actualStateFile.Path(), t.perm)
+		return system.Chmod(actualStateFile.Path(), t.perm&^umask)
 	} else if err := actualStateEntry.Remove(system); err != nil {
 		return err
 	}
@@ -235,7 +236,7 @@ func (t *TargetStatePresent) Apply(system System, persistentState PersistentStat
 	if err != nil {
 		return err
 	}
-	return system.WriteFile(actualStateEntry.Path(), contents, t.perm)
+	return system.WriteFile(actualStateEntry.Path(), contents, t.perm&^umask)
 }
 
 // EntryState returns t's entry state.
@@ -251,7 +252,7 @@ func (t *TargetStatePresent) Equal(actualStateEntry ActualStateEntry, umask os.F
 	if !ok {
 		return false, nil
 	}
-	if !umaskPermEqual(actualStateFile.perm, t.perm, umask) {
+	if runtime.GOOS != "windows" && actualStateFile.perm != t.perm&^umask {
 		return false, nil
 	}
 	return true, nil

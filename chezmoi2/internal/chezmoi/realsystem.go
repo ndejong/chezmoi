@@ -31,7 +31,7 @@ func (s *RealSystem) Lstat(filename AbsPath) (os.FileInfo, error) {
 
 // Mkdir implements System.Mkdir.
 func (s *RealSystem) Mkdir(name AbsPath, perm os.FileMode) error {
-	return s.fs.Mkdir(string(name), perm)
+	return s.fs.Mkdir(string(name), perm&^Umask)
 }
 
 // PathSeparator implements doublestar.OS.PathSeparator.
